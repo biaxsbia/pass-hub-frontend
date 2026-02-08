@@ -1,22 +1,22 @@
 import React, { useState } from "react";
+import Header from "./Header";
 
-export default function Login({ onLoginSuccess }) { 
+
+export default function Login({ onLoginSuccess }) {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [totp, setTotp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const payload = step === 1 
-      ? { email, password } 
-      : { email, password, totp };
+    const payload =
+      step === 1 ? { email, password } : { email, password, totp };
 
     try {
       const response = await fetch("http://localhost:8080/auth/login", {
@@ -28,35 +28,35 @@ export default function Login({ onLoginSuccess }) {
 
       if (response.status === 206) {
         setStep(2);
-        setLoading(false);
       } else if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.token);
-        
-        if (onLoginSuccess) {
-          onLoginSuccess();
-        }
-        
-        setSuccessMessage("Login bem-sucedido!");
+        onLoginSuccess?.();
       } else {
-        const errMsg = await response.text();
-        setError(errMsg);
+        setError(await response.text());
       }
-    } catch (err) {
-      setError("Erro na conexão com o servidor");
+    } catch {
+      setError("Erro ao conectar com o servidor");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: "auto", padding: 20 }}>
-      <h2>Login</h2>
+    <div className="App">
+      <div className="card-header">
+<Header />
+</div>
+      <h2>{step === 1 ? "Entrar" : "Autenticação em dois fatores"}</h2>
+      <p className="text-muted">
+        {step === 1
+          ? "Digite suas credenciais"
+          : "Digite o código do seu aplicativo autenticador"}
+      </p>
+
       <form onSubmit={handleSubmit}>
-        {step >= 1 && (
+        {step === 1 && (
           <>
-            <div>
-              <label>Email:</label><br />
+            <div className="form-group">
+              <label>Email</label>
               <input
                 type="email"
                 required
@@ -64,8 +64,9 @@ export default function Login({ onLoginSuccess }) {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div>
-              <label>Senha:</label><br />
+
+            <div className="form-group">
+              <label>Senha</label>
               <input
                 type="password"
                 required
@@ -77,27 +78,25 @@ export default function Login({ onLoginSuccess }) {
         )}
 
         {step === 2 && (
-          <div>
-            <label>Código 2FA (TOTP):</label><br />
+          <div className="form-group">
+            <label>Código 2FA</label>
             <input
               type="text"
-              required
               value={totp}
               onChange={(e) => setTotp(e.target.value)}
               maxLength={6}
               pattern="\d{6}"
-              title="Informe o código TOTP de 6 dígitos"
+              required
             />
           </div>
         )}
 
-        <button type="submit" disabled={loading} style={{ marginTop: 10 }}>
+        <button disabled={loading}>
           {loading ? "Aguarde..." : step === 1 ? "Avançar" : "Entrar"}
         </button>
       </form>
 
-      {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
-      {successMessage && <p style={{ color: "green", marginTop: 10 }}>{successMessage}</p>}
+      {error && <div className="error">{error}</div>}
     </div>
   );
 }

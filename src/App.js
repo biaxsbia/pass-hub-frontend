@@ -2,29 +2,35 @@ import React, { useState, useEffect } from 'react';
 import PasswordList from './components/PasswordList';
 import Login from './components/Login';
 import Register from './components/Register';
+import api from './services/api';
 import './styles.css';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    setLoggedIn(!!token);
+    api.get('')
+      .then(() => setLoggedIn(true))
+      .catch(() => setLoggedIn(false))
+      .finally(() => setLoading(false));
   }, []);
 
-
-const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
     setLoggedIn(false);
   };
 
-  if (loggedIn) {
+  if (loading) return <p>Carregando...</p>;
+
+if (loggedIn) {
   return (
     <div className="App">
-      <button onClick={handleLogout} style={{ position: 'absolute', top: 10, right: 10 }}>
-        Sair
-      </button>
+      <div className="logout-button">
+        <button onClick={handleLogout} className="button-primary">
+          Sair
+        </button>
+      </div>
       <PasswordList />
     </div>
   );
